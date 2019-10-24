@@ -1,10 +1,13 @@
 plugins {
     id 'groovy'
     id 'java'
+    id "java-gradle-plugin"
+    id "com.gradle.plugin-publish" version "0.10.1"
 }
 
 group 'gliby.gaal.gradle'
 version '1.0.0'
+description = "GAAL Gradle Plugin"
 
 repositories {
     mavenCentral()
@@ -14,4 +17,47 @@ dependencies {
     compile gradleApi()
     compile localGroovy()
     testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+jar.manifest.mainAttributes([
+        'Implementation-Title'  : project.name,
+        'Implementation-Version': project.version
+])
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier = 'sources'
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    from javadoc.destinationDir
+    classifier = 'javadoc'
+}
+
+assemble.dependsOn javadocJar, sourcesJar
+
+[compileJava, compileGroovy].each {
+    it.options.encoding = 'UTF-8'
+    it.options.deprecation = true
+    it.options.fork = true
+}
+
+artifacts {
+    archives jar
+    archives javadocJar
+    archives sourcesJar
+}
+
+pluginBundle {
+    website = "https://github.com/Gliby/gaal-gradle"
+    vcsUrl = 'https://github.com/Gliby/gaal-gradle.git'
+    plugins {
+        GAALPlugin {
+            id = project.group
+            description = project.description
+            displayName = 'GAAL Gradle'
+            version = getVersion()
+            tags = ['minecraft', 'forgegradle', 'gaal', 'gliby']
+        }
+    }
 }
